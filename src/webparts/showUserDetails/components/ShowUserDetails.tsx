@@ -16,6 +16,7 @@ export default class ShowUserDetails extends React.Component<IShowUserDetailsPro
   errorDisplay: string;
   tableDisplay: string;
   type: string;
+  spinnerDisplay: string;
 }> {
   
   constructor(props){
@@ -28,16 +29,18 @@ export default class ShowUserDetails extends React.Component<IShowUserDetailsPro
       allItemsWithPics: [],
       errorDisplay: "none",
       tableDisplay: "flex",
-      type: ""
+      type: "",
+      spinnerDisplay: "",
     };
     this.popUp = this.popUp.bind(this);
   }
 
   public componentDidMount(): void {  
+
     try{
       this.showAll();
       }
-      catch (e){
+      catch {
         this.setState({
                 errorDisplay: "",
                 tableDisplay: "none"
@@ -48,97 +51,40 @@ export default class ShowUserDetails extends React.Component<IShowUserDetailsPro
 
 
 
-  private async getItems() {
-    
-    var listName = this.props.listName;
-    try {
-    var itemsAll: any[] = await pnp.sp.web.lists.getByTitle(listName).items.orderBy("Order", true).get();
-    var itemIDs: any[] = [];
-    var fname;
-    var fnameArr: any[] = [];
-
-    for (var k=0; k<itemsAll.length; k++){
-
-      itemIDs.push(itemsAll[k]["ID"]);
-
-    }
-    itemIDs.forEach(async id => {
-      fname = await pnp.sp.web.lists.getByTitle(listName).items.getById(id).file.expand("File/Name").get();
-      fnameArr.push(fname.Name);
-     for (var j = 0; j < itemsAll.length; j++){
-
-        if (itemsAll[j]["ID"]==(id)){
-            itemsAll[j].img = this.state.context + "/" + listName.replace('&',"") + "/" + fname.Name;
-
-        }
-    }});
-
-    this.setState({
-      allItemsWithPics: itemsAll,
-
-    });}
-    catch (e){
-      this.setState({
-        errorDisplay: "",
-        tableDisplay: "none"
-      });
-    }
-    
-  }
-
 
   private async showAll() {
-
-    await this.getItems();
-
+    var itemsAll: any[] = [];
     var listName = this.props.listName;
-    var itemsAll = this.state.allItemsWithPics;
-    var itemIDs: any[] = [];
-    var itemsLvl: any[] = [];
     var level = this.props.level;
-    for (var k=0; k<itemsAll.length; k++){
-          itemIDs.push(itemsAll[k]["ID"]);
-        }
-        
-          for (var l=0; l<itemIDs.length; l++){
-            var fname = await pnp.sp.web.lists.getByTitle(listName).items.getById(itemIDs[l]).file.expand("File/Name").get();
-      
-            for (var j = 0; j < itemsAll.length; j++){
-              if (itemsAll[j]["ID"]==(itemIDs[l])){
-                  itemsAll[j].img = this.state.context + "/" + listName.replace('&',"") + "/" + fname.Name;
-              }
-         }}
-         for (var i = 0; i < itemsAll.length; i++){
-      
-            if (itemsAll[i].Level == level){
-              
-              itemsLvl.push(itemsAll[i]);
-            }
-          }
-          try {if(itemsAll[0].Level == null){
-            this.setState({
-              errorDisplay: "",
-              tableDisplay: "none"
-            });
-          }}
-          catch {
-            this.setState({
-              errorDisplay: "",
-              tableDisplay: "none"
-            });
-          }
-          
-    
-
+    var files: any[] = [];
+    try {await pnp.sp.web.lists.getByTitle(listName).items.orderBy("Order0", true).filter("Level eq '" + level + "'").get().then(items => 
+      { items.forEach(item => {itemsAll.push(item);});});
 
     
+    for (var i = 0; i< itemsAll.length; i++){
+     await pnp.sp.web.lists.getByTitle(listName).items.getById(itemsAll[i].ID).file.expand("File/Name").get().then(fname => {
+        var img = this.state.context + "/" + listName.replace('&',"") + "/" + fname.Name;
+        itemsAll[i].img = img;
+      });
+    }
+
     this.setState({
-      items: itemsLvl,
-    });
+      items: itemsAll,
+      spinnerDisplay: "none"
+    });}
 
+    catch 
+      {
+        this.setState({
+                spinnerDisplay: "none",
+                errorDisplay: "",
+                tableDisplay: "none"
+              });
+      }
     
-  }
-  
+    }
+   
+     
 
     private popUp(index): React.MouseEventHandler<HTMLButtonElement>{
       const dialog: UserDialog = new UserDialog();
@@ -178,6 +124,7 @@ export default class ShowUserDetails extends React.Component<IShowUserDetailsPro
           }
         </div>
         <div style={{display:this.state.errorDisplay}}>Input Error</div>
+        <div style={{display:this.state.spinnerDisplay}}> <div className={`${styles.spinner}`}></div> </div> 
       </section>
     );
   }
