@@ -42,6 +42,7 @@ export default class ShowUserDetails extends React.Component<IShowUserDetailsPro
       }
       catch {
         this.setState({
+                spinnerDisplay: "none",
                 errorDisplay: "",
                 tableDisplay: "none"
               });
