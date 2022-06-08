@@ -1,11 +1,7 @@
 
 import * as React from 'react';
 import {UserDialogContentProps} from './UserDetailsPopUpProps';
-import styles from './ShowUserDetails.module.scss';
-import pnp from 'sp-pnp-js';
 import { BaseDialog, IDialogConfiguration } from '@microsoft/sp-dialog';
-import * as ReactDOM from 'react-dom';
-import { LazyLoadImage } from 'react-lazy-load-image-component';
 
 export class UserDialogContent extends React.Component<UserDialogContentProps, {}> {
 
@@ -68,6 +64,7 @@ export class UserDialogContent extends React.Component<UserDialogContentProps, {
       section.append(name);
       section.append(role);
       section.append(note);
+      
       if(slogan.innerText!=""){
         section.append(setText);
         section.append(slogan);}
